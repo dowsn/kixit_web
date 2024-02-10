@@ -3,21 +3,27 @@
   "version": "1.0.0",
   "type": "module",
   "description": "Creative online game for up to 6 players powered by AI.",
-  "main": "./server/app.js",
+  "main": "./server/server.js",
   "scripts": {
     "test": "mocha utils/**/*.test.js",
-    "start": "./server/app.js",
+    "start": "./server/server.js",
     "test-watch": "nodemon --exec 'npm test'",
-    "dev": "nodemon ./server/app.js"
+    "dev": "nodemon ./server/server.js"
   },
   "keywords": [],
   "author": "Lukas Meinhart",
   "license": "ISC",
   "dependencies": {
+    "app-root-path": "^3.1.0",
+    "axios": "^1.6.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
     "mongoose": "^8.1.1",
-    "nodemon": "^3.0.3"
+    "nodemon": "^3.0.3",
+    "openai": "^4.26.0"
+  },
+  "devDependencies": {
+    "webpack-dev-server": "^4.15.1"
   }
 }

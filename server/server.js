@@ -1,25 +1,31 @@
-const express = require('express');
+import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+import mongoose from 'mongoose';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+import connectDB from './config/db.js'; // to connect to db
+import gamesRouter from './routes/games.js';
 
+// Create Express server
 const app = express();
 
-const cors = require('cors');
+dotenv.config();
 
-require('dotenv').config({ path: './config.env' });
 const port = process.env.PORT || 5000;
 
 app.use(cors());
 
+connectDB();
+
+
 app.use(express.json());
 
-app.use(require('./routes/record'));
+app.use(gamesRouter);
 
 // Get MongoDB driver connection
-const dbo = require('./db/conn');
 
 app.listen(port, () => {
   // Perform a database connection when server starts
-  dbo.connectToServer(function (err) {
-    if (err) console.error(err);
-  });
   console.log(`Server is running on port: ${port}`);
 });
