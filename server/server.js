@@ -1,11 +1,16 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
+import { createServer } from 'http';
 import mongoose from 'mongoose';
 import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { server as WebSocketServer } from 'websocket';
 import connectDB from './config/db.js'; // to connect to db
-import gamesRouter from './routes/games.js';
+import setupWebSocketServer from './helpers/websockets.js';
+import apiRouter from './routes/apiRouter.js';
+import playGameRouter from './routes/playGameRouter.js';
+import startGameRouter from './routes/startGameRouter.js';
 
 // Create Express server
 const app = express();
@@ -18,14 +23,17 @@ app.use(cors());
 
 connectDB();
 
-
 app.use(express.json());
 
-app.use(gamesRouter);
+app.use('/start_game', startGameRouter);
+app.use('/play_game', playGameRouter);
+app.use('/api', apiRouter);
 
-// Get MongoDB driver connection
+// Create HTTP server
+const server = createServer(app);
 
-app.listen(port, () => {
-  // Perform a database connection when server starts
+server.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
+
+setupWebSocketServer(server);

@@ -13,7 +13,7 @@ export default function Edit() {
     async function fetchData() {
       const id = params.id.toString();
       const response = await fetch(
-        `http://localhost:4000/game/${params.id.toString()}`,
+        `http://localhost:4000/start_game/${params.id.toString()}`,
       );
 
       if (!response.ok) {

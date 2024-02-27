@@ -31,6 +31,7 @@ export default function Edit() {
         return;
       }
 
+
       setForm(record);
     }
 
@@ -66,7 +67,7 @@ export default function Edit() {
     navigate('/');
   }
 
-  // This following section will display the form that takes input from the user to update the data.
+  // S. This following section will display the form that takes input from the user to update the data.
   return (
     <div>
       <h3>Update Record</h3>
