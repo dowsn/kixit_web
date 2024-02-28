@@ -8,6 +8,10 @@ import {
   useCheckGameAndUser,
 } from '../client_utils/safety_utils';
 import { checkOneName } from '../client_utils/text_utils';
+import Message from './message';
+import Error from './PlayHeader/Error';
+import Message from './PlayHeader/Message';
+import WaitingRoom from './PlayViews/WaitingRoom';
 
 export default function Play() {
   const [errorMessage, setErrorMessage] = useState('');
@@ -159,11 +163,16 @@ export default function Play() {
   };
 
 // Define your conditions
-const conditionCardGeneration = playerId != game.players[game.currentExhibitionIndex] && player.currentDeck.count == 0 && $timeout1 > 0;
-const conditionCardDeck = playerId != game.players[game.currentExhibitionIndex] && $timeout1 == 60;
-const conditionWaitingRoom = playerId == game.players[game.currentExhibitionIndex] && game.currentExhibitionDeck.length != game.numbeOfPlayers;
-const conditionCardSelection = playerId == game.players[game.currentExhibitionIndex] && game.currentExhibitionDeck.length === game.numbeOfPlayers;
-const conditionWinningTable = playerId != game.players[game.currentExhibitionIndex] && $timeout1 == 0;
+  const conditionCardGeneration = playerId != game.players[game.currentExhibitionIndex] && player.currentDeck.count == 0 && $timeout1 > 0;
+
+  const conditionCardDeck = playerId != game.players[game.currentExhibitionIndex] && $timeout1 == 60;
+
+  const conditionWaitingRoom =ready === false;
+
+  const conditionCardSelection = playerId == game.players[game.currentExhibitionIndex] && game.currentExhibitionDeck.length === game.numbeOfPlayers;
+
+  const conditionWinningTable = playerId != game.players[game.currentExhibitionIndex] && $timeout1 == 0;
+
 
 // Define your function
 function renderBasedOnConditions() {
@@ -178,7 +187,7 @@ function renderBasedOnConditions() {
   } else if (conditionWaitingRoom) {
     setGameState("Waiting Room");
     setInstructions("Please wait for the other players to put their cards");
-    return <div>Waiting Room</div>;
+    return <WaitingRoom message={message} />;
   } else if (conditionCardSelection) {
     setGameState("Card Selection");
     setInstructions("Please select a card from the table");
@@ -195,6 +204,14 @@ function renderBasedOnConditions() {
        {timeout1 != 0 && (<div className="timeout1">{timeout1}</div>)}
       {timeout2 == 0 && (<div className="timeout2">{timeout2}</div>)}
 
+
+//    const handleMessageChange = (newMessage) => {
+//     setMessage(newMessage);
+//   };
+
+//   return <WaitingRoom message={message} onMessageChange={handleMessageChange} />;
+// };
+
 const mainView = renderBasedOnConditions();
 
 
@@ -209,21 +226,13 @@ const mainView = renderBasedOnConditions();
   // This following section will display the table with the records of individuals.
   return (
     <div>
-     <PlayerInfo exhibitionTitle={currentState} score={player.score} username={player.name} />
-     <StateInfo exhibitionTitle={currentState} gameState={gameState} instructions={instructions} />
+     <PlayerInfo exhibitionTitle={exhibitionTitle} score={player.score} username={player.name} />
+      <StateInfo exhibitionTitle={currentState} gameState={gameState} instructions={instructions} />
 
+      {mainView}
 
       <div className="timeout2">{timeout2}</div>
 
-
-      {ready === false && (
-        <div>
-          <ul>
-            <li></li>
-          </ul>
-          <div className="message">{message}</div>
-        </div>
-      )}
 
       {playerId == game.players[game.currentExhibitionIndex] &&
         game.currentExhibitionDeck.length != game.numbeOfPlayers && (
@@ -256,7 +265,7 @@ const mainView = renderBasedOnConditions();
     </div>
         }
     <Message message={message} />
-     <Error errorMessage={errorMessage} />
+    <Error errorMessage={errorMessage} />
 
     </div>
 
