@@ -12,24 +12,25 @@ import Player from '../models/player.js'; // adjust the path to match the locati
 // The router will be added as a middleware and will take control of requests starting with path /record.
 const startGameRouter = express.Router();
 
-startGameRouter.route('/new_game/:username/:numberofplayers').get(async (req, res) => {
+startGameRouter.route('/new_game/:username/:numberofplayers/:numberofimages').get(async (req, res) => {
   //  res.status(200).json({ gameId: '12wwj3', playerId: '456' });
   const gameId = randomString();
   const playerId = randomString();
-  const { username, numberofplayers } = req.params;
-
-
-  const newGame = new Game({
-    _id: gameId,
-    players: [playerId],
-    numberOfPlayers: numberofplayers,
-  });
+  const { username, numberofplayers, numberofimages } = req.params;
 
   const newPlayer = new Player({
     _id: playerId,
     gameId: gameId,
-    username
+    username,
   });
+
+  const newGame = new Game({
+    _id: gameId,
+    players: [newPlayer],
+    numberOfPlayers: numberofplayers,
+    numberOfImages: numberofimages
+  });
+
 
   try {
     newPlayer.exhibitionTitle =
@@ -76,7 +77,7 @@ startGameRouter.route('/join_game/:gameId/:username').get(async (req, res) => {
       await Game.findOneAndUpdate(
         { _id: gameId },
         {
-          $push: { players: playerId },
+          $push: { players: newPlayer },
         },
         { new: true },
       );

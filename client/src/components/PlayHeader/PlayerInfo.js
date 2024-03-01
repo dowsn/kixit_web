@@ -10,4 +10,3 @@ const PlayerInfo = ({ exhibitionTitle, score, username }) =>  (
 
 export default PlayerInfo;
 
-     <PlayerInfo exhibitionTitle={currentState} score={player.score} username={player.name} />

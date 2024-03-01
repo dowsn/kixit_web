@@ -5,13 +5,20 @@ import { Link } from 'react-router-dom';
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
 import {
   handleResponse,
-  useCheckGameAndUser,
+  getGameAndUser,
 } from '../client_utils/safety_utils';
 import { checkOneName } from '../client_utils/text_utils';
-import Message from './message';
-import Error from './PlayHeader/Error';
-import Message from './PlayHeader/Message';
-import WaitingRoom from './PlayViews/WaitingRoom';
+import ErrorMessage from './PlayHeader/ErrorMessage.js';
+import Message from './PlayHeader/Message.js';
+import PlayerInfo from './PlayHeader/PlayerInfo';
+import StateInfo from './PlayHeader/StateInfo';
+import Archive from './playViews/Archive';
+import ArtistsBar from './playViews/ArtistsBar';
+import Atelier from './playViews/Atelier';
+import Auction from './playViews/Auction';
+import Exhibition from './playViews/Exhibition';
+import Gallery from './playViews/Gallery';
+import Lobby from './playViews/Lobby';
 
 export default function Play() {
   const [errorMessage, setErrorMessage] = useState('');
@@ -20,47 +27,72 @@ export default function Play() {
   const [exhibitionTitle, setExhibitionTitle] = "";
   const [gameState, setGameState] = "";
   const [instructions, setInstructions] = "";
-
-
-  const { gameId, playerId } = useCheckGameAndUser();
-
-    const [game, setGame] = useState({});
-    const [player, setPlayer] = useState({});
+  const [playerNames, setPlayerNames] = [];
+  const [numberOfRounds, setNumberOfRounds] = 0;
 
 
 
-  useEffect(() => {
 
- async function getGameAndPlayer() {
-   try {
-     const response = await axios.get(
-       'http://localhost:4000/play_game/game_and_player',
-       {
-         headers: {
-           'Content-Type': 'application/json',
-           gameId: gameId,
-           playerId: playerId,
-         },
-       },
-     );
+  const [game, setGame] = useState({});
+  const [player, setPlayer] = useState({});
 
-     const data = response.data;
-     if (data.success === true) {
-       setGame(data.game);
-       setPlayer(data.player)
-       setExhibitionTitle(data.currentPlayer.exhibitionTitle)
-     } else {
-       setErrorMessage(
-         'Something went wrong',
-       );
-       // push to join game
-     }
-     // Assuming the API returns a list of players and their readiness status
-   } catch (error) {
-     console.error(`Error: ${error}`);
-     return false;
-   }
- }
+useEffect(() => {
+  const { gameId, playerId, gameData, playerData } = getGameAndUser();
+
+  setGame(gameData);
+  setPlayer(playerData);
+
+  gameData.players.forEach((player) => {
+    setPlayerNames(prevPlayerNames => [...prevPlayerNames, player.name])
+  });
+
+  setExhibitionTitle(gameData.currentPlayer.exhibitionTitle);
+  setNumberOfRounds(gameData.numberOfPlayers * gameData.numberOfImages);
+}, [game, player]);
+
+
+
+ //
+ //  useEffect(() => {
+ //
+ // async function getGameAndPlayer() {
+ //   try {
+ //     const response = await axios.get(
+ //       'http://localhost:4000/play_game/game_and_player',
+ //       {
+ //         headers: {
+ //           'Content-Type': 'application/json',
+ //           gameId: gameId,
+ //           playerId: playerId,
+ //         },
+ //       },
+ //     );
+ //
+ //     const data = response.data;
+ //     if (data.success === true) {
+ //       setGame(data.game);
+ //       setPlayer(data.player);
+ //
+ //       game.players.forEach((player) => {
+ //          setPlayerNames(prevPlayerNames => [...prevPlayerNames, player.name])
+ //       });
+ //
+ //       setExhibitionTitle(game.currentPlayer.exhibitionTitle)
+ //
+ //       setNumberOfRounds(game.numberOfPlayers * game.numberOfImages);
+ //
+ //     } else {
+ //       setErrorMessage(
+ //         'Something went wrong',
+ //       );
+ //       // push to join game
+ //     }
+ //     // Assuming the API returns a list of players and their readiness status
+ //   } catch (error) {
+ //     console.error(`Error: ${error}`);
+ //     return false;
+ //   }
+ // }
 
 
   const client = new W3CWebSocket('ws://localhost:4000');
@@ -90,11 +122,17 @@ export default function Play() {
     if (dataFromServer.type == 'WAITING_ROOM') {
       if (dataFromServer.ready) {
         setReady(true);
+        setPlayerNames(playerNames => [...playerNames, dataFromServer.playerName])
         setMessage(dataFromServer.message);
       } else {
         setReady(false)
         setMessage(dataFromServer.message);
       }
+    }
+
+    if (dataFromServer.type == 'UPDATE') {
+      setGame(dataFromServer.game);
+      setPlayer(dataFromServer.player);
     }
 
   };
@@ -119,8 +157,6 @@ export default function Play() {
         })
       );
     }
-
-
   }
 
   const [countdown60, setCountdown60] = useState(60);
@@ -135,8 +171,8 @@ export default function Play() {
         setCountdown60(countdown60 - 1);
       }, 1000);
     } else if (isActive60 && countdown60 === 0) {
-      setCountdown60(60);
       setIsActive60(false);
+      handleStart30();
     }
     return () => clearInterval(timer);
   }, [isActive60, countdown60]);
@@ -145,14 +181,16 @@ export default function Play() {
     let timer;
     if (isActive30 && countdown30 > 0) {
       timer = setInterval(() => {
-        setCountdown30(countdown30 - 1);
+        if (countdown30 > 0) {
+          setCountdown30(countdown30 - 1);
+        } else {
+          setIsActive30(false);
+        }
       }, 1000);
-    } else if (isActive30 && countdown30 === 0) {
-      setCountdown30(30);
-      setIsActive30(false);
     }
     return () => clearInterval(timer);
   }, [isActive30, countdown30]);
+
 
   const handleStart60 = () => {
     setIsActive60(true);
@@ -162,110 +200,91 @@ export default function Play() {
     setIsActive30(true);
   };
 
-// Define your conditions
-  const conditionCardGeneration = playerId != game.players[game.currentExhibitionIndex] && player.currentDeck.count == 0 && $timeout1 > 0;
 
-  const conditionCardDeck = playerId != game.players[game.currentExhibitionIndex] && $timeout1 == 60;
+  const conditionGallery =
+    player._id === game.players[game.currentExhibitionIndex]._id &&
+    game.currentExhibitionDeck.length !== game.numbeOfPlayers;
 
-  const conditionWaitingRoom =ready === false;
+  const conditionAtelier = ready === true &&
+    player._id !== game.players[game.currentExhibitionIndex]._id &&
+    countdown60 <= 60 &&
+    countdown60 > 0 &&
+    player.currentExhibitionDeck.length === 0;
+  // activate whenever needed
 
-  const conditionCardSelection = playerId == game.players[game.currentExhibitionIndex] && game.currentExhibitionDeck.length === game.numbeOfPlayers;
+  const conditionArchive =
+    player._id !== game.players[game.currentExhibitionIndex]._id &&  countdown30 <= 30 && countdown30 > 0;
 
-  const conditionWinningTable = playerId != game.players[game.currentExhibitionIndex] && $timeout1 == 0;
+  const conditionLobby = ready === false;
+
+  const conditionAuction =
+    player._id === game.players[game.currentExhibitionIndex]._id &&
+    game.currentExhibitionDeck.length === game.numbeOfPlayers;
 
 
-// Define your function
-function renderBasedOnConditions() {
-  if (conditionCardGeneration) {
-    setGameState("Card Generation");
-    setInstructions("Please wait for the other players to put their cards");
-    return <div>Card Generation</div>;
-  } else if (conditionCardDeck) {
-    setGameState("Card Deck");
-    setInstructions("Please select a card from your deck");
-    return <div>Card Deck</div>;
-  } else if (conditionWaitingRoom) {
-    setGameState("Waiting Room");
-    setInstructions("Please wait for the other players to put their cards");
-    return <WaitingRoom message={message} />;
-  } else if (conditionCardSelection) {
-    setGameState("Card Selection");
-    setInstructions("Please select a card from the table");
-    return <div>Card Selection</div>;
-  } else if (conditionWinningTable) {
-    setGameState("Winning Table");
-    setInstructions(game.winningPlayer + " is a winner!");
-    return <div>Winning Table</div>;
+  const conditionArtistBar = player._id !== game.players[game.currentExhibitionIndex]._id &&
+    game.currentExhibitionDeck.length === game.numbeOfPlayers;
+
+  const conditionExhibition = player._id === game.player.numbeOfPlayers;
+
+
+  function renderBasedOnConditions() {
+  if (conditionGallery) {
+    setGameState("Gallery");
+    setInstructions("Hello curator! This is your gallery... It's empty at the moment. Please wait for the artists to present their creations(or rather generations?).");
+    return <Gallery player={playerNames} />;
+  }
+  else if (conditionAtelier) {
+    setGameState("Atelier");
+    setInstructions("Hello artist. Please generate an image for exhibition using original prompt.<br>Please, omit words from exhibition title.");
+    return <Atelier handler={handleData} game={game} player={player} onStart60={handleStart60} />;
+  } else if (conditionArchive) {
+    setGameState("Archive");
+    setInstructions("Great job! Now, please select an image you want to exhibit.");
+    return <Archive handler={handleData} game={game} player={player} />;
+  } else if (conditionLobby) {
+    setGameState("Lobby");
+    setInstructions("");
+    return <Lobby player={playerNames}  />;
+  } else if (conditionAuction) {
+    setGameState("Auction");
+    setInstructions("Your artist worked hard on their images. Now, it's time to select the best one. You are the curator after all.");
+    return <Auction handler={handleData} game={game} player={player} />;
+  } else if (conditionArtistBar) {
+    setGameState("Artist Bar");
+    setInstructions("Now it's time for break with a glass of wine. Please wait for the curator to select the best image. In the meantime you can compare your images with other artists.");
+    return <ArtistsBar player={playerNames} />;
+  } else if (conditionExhibition) {
+    setGameState("Exhibition");
+    setInstructions(game.winningPlayer + " is a winner! See also winning images of other players.");
+    return <Exhibition handler={handleData} game={game} player={player} />; // all images and score
   } else {
-    return null;
+    return null; // hcange to something else
   }
 }
 
-       {timeout1 != 0 && (<div className="timeout1">{timeout1}</div>)}
-      {timeout2 == 0 && (<div className="timeout2">{timeout2}</div>)}
-
-
-//    const handleMessageChange = (newMessage) => {
-//     setMessage(newMessage);
-//   };
-
-//   return <WaitingRoom message={message} onMessageChange={handleMessageChange} />;
-// };
 
 const mainView = renderBasedOnConditions();
 
 
-  useEffect(() => {
-    if (conditionCardGeneration) {
-      handleStart60();
-    }
-  }, [playerId, game, player, $timeout1]);
+  // useEffect(() => {
+  //   if (conditionCardGeneration) {
+  //     handleStart60();
+  //   }
+  // }, [playerId, game, player, $timeout1]);
 
 
 
   // This following section will display the table with the records of individuals.
   return (
     <div>
-     <PlayerInfo exhibitionTitle={exhibitionTitle} score={player.score} username={player.name} />
-      <StateInfo exhibitionTitle={currentState} gameState={gameState} instructions={instructions} />
+     <PlayerInfo score={player.score} username={player.name} />
+      <StateInfo exhibitionTitle={exhibitionTitle} gameState={gameState} instructions={instructions} />
 
       {mainView}
 
-      <div className="timeout2">{timeout2}</div>
-
-
-      {playerId == game.players[game.currentExhibitionIndex] &&
-        game.currentExhibitionDeck.length != game.numbeOfPlayers && (
-          <div>Waiting for other players to put their cards</div>
-        )}
-
-      {playerId == game.players[game.currentExhibitionIndex] &&
-        game.currentExhibitionDeck.length === game.numbeOfPlayers && (
-        game.currentExhibitionDeck.map((card) => {
-            return <div class="card"><img player={card.playerId} src={card.url} alt={card.prompt}><button class="selectCard" onClick={cardSelected({card.playerId})}>Select</button></div>
-        })
-
-        {playerId != game.players[game.currentExhibitionIndex] && player.currentDeck.count == 0 && $timeout1 > 0 {
-
-            <div>
-      Countdown 60: {countdown60}
-      <button onClick={handleStart60}>Start 60s Countdown</button>
-      <br/>
-
-        // generate image + countdown
-        // say added
-
-        // timeout 2 and full game
-      }
-
-            {playerId != game.players[game.currentExhibitionIndex] && $timeout1 == 60 {
-        // generate image + countdown
-   Countdown 30: {countdown30}
-      <button onClick={handleStart30}>Start 30s Countdown</button>
-    </div>
-        }
     <Message message={message} />
-    <Error errorMessage={errorMessage} />
+    <ErrorMessage errorMessage={errorMessage} />
 
     </div>
 

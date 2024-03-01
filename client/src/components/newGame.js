@@ -9,16 +9,16 @@ export default function NewGame() {
 
   const [gameId, setGameId] = useState('');
   const [username, setUsername] = useState('');
-  const [numberOfPlayers, setNumberOfPlayers] = useState(0);
+  const [numberOfPlayers, setNumberOfPlayers] = useState(2);
+  const [numberOfImages, setNumberOfImages] = useState(1);
   const [message, setMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [error, setError] = useState('');
 
-  const { showOverlay, text } = useTimeoutOverlay(
-    true,
-    'Welcome galerist',
-  );
-
+  // const { showOverlay, text } = useTimeoutOverlay(
+  //   true,
+  //   'Welcome galerist',
+  // );
 
   async function createNewGame(e) {
     e.preventDefault();
@@ -33,7 +33,7 @@ export default function NewGame() {
 
 try {
   const response = await fetch(
-    `http://localhost:4000/start_game/new_game/${username}/${numberOfPlayers}`,
+    `http://localhost:4000/start_game/new_game/${username}/${numberOfPlayers}/${numberOfImages}`,
   );
   const data = await handleResponse(response, 'Something went wrong');
   localStorage.setItem('gameId', data.gameId);
@@ -53,7 +53,6 @@ try {
 
   return (
     <div>
-      {showOverlay && <div className="overlay">{text}</div>}
 
       {gameId === '' && (
         <form>
@@ -63,19 +62,29 @@ try {
             placeholder="Enter your username"
             onChange={(event) => setUsername(event.target.value)}
           />
-          <br />
-<select
-  value={numberOfPlayers}
-  onChange={(event) => setNumberOfPlayers(event.target.value)}
->
-  <option value="">Select number of players</option>
-
-  <option value="2">2</option>
-  <option value="3">3</option>
-  <option value="4">4</option>
-  <option value="5">5</option>
-  <option value="6">6</option>
-</select>
+          <br /><br />
+          <label value="">Select number of players</label>
+          <select
+            value={numberOfPlayers}
+            onChange={(event) => setNumberOfPlayers(event.target.value)}
+          >
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+          <br /><br />
+          <label>Number of images per player</label>
+          <select
+            value={numberOfImages}
+            onChange={(event) => setNumberOfImages(event.target.value)}
+          >
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+          </select>
+            <br /><br />
           <button type="submit" onClick={createNewGame}>
             Create New Game
           </button>

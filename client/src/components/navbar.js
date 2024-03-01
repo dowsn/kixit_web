@@ -43,11 +43,11 @@ export default function Navbar() {
               </NavLink>
             </li>
 
-            <li className="nav-item">
-              <NavLink className="nav-link" to="/load_game">
-                Load Game
-              </NavLink>
-            </li>
+            {/*<li className="nav-item">*/}
+            {/*  <NavLink className="nav-link" to="/load_game">*/}
+            {/*    Load Game*/}
+            {/*  </NavLink>*/}
+            {/*</li>*/}
           </ul>
         </div>
       </nav>

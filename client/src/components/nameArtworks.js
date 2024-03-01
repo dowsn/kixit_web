@@ -2,56 +2,70 @@ import axios from 'axios';
 import { set } from 'mongoose';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useCheckGameAndUser } from '../client_utils/safety_utils';
+import { getGameAndUser } from '../client_utils/safety_utils';
 import { checkThreeWords, useTimeoutOverlay } from '../client_utils/text_utils';
 
 export default function NameArtworks() {
 
-  const { gameId, playerId } = useCheckGameAndUser();
 
-    const { showOverlay, text } = useTimeoutOverlay(true, 'Welcome galerist');
+  const { showOverlay, text } = useTimeoutOverlay(true, 'Welcome galerist');
 
   const [exhibitionTitle, setExhibitionTitle] = useState('');
-  const [name1, setName1] = useState('');
-  const [name2, setName2] = useState('');
-  const [name3, setName3] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [message, setMessage] = useState('');
+  const [game, setGame] = useState({});
+  const [player, setPlayer] = useState({});
+  const [names, setNames] = useState([]);
 
-      const setters = [setName1, setName2, setName3];
-      const names = [name1, name2, name3];
+
 
   useEffect(() => {
-    async function getExhibitionTitle() {
-      try {
 
-        const response = await axios.get(
-          'http://localhost:4000/play_game/exhibition_title',
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'gameId': gameId,
-              'playerId': playerId,
-            },
-          },
-        );
+    const { gameData, playerData } = getGameAndUser();
 
-        const data = response.data;
-        if (data.success == true) {
-          setExhibitionTitle(data.exhibitionTitle);
-        } else {
-           setExhibitionTitle("Your exhibition is missing. Please contact the game host.");
-        }
-        // Assuming the API returns a list of players and their readiness status
-      } catch (error) {
-        console.error(`Error: ${error}`);
-        return false;
-      }
+    setGame(gameData);
+    setPlayer(playerData);
+
+    game.numberOfImages.forEach((image) => {
+      setNames(prevNames => [...prevNames, '']);
     }
+    );
 
-    getExhibitionTitle(gameId, playerId);
+    setPlayer(playerData);
 
-  });
+   setExhibitionTitle(player.exhibitionTitle);
+
+
+    // async function getExhibitionTitle() {
+    //   try {
+
+    //     const response = await axios.get(
+    //       'http://localhost:4000/play_game/exhibition_title',
+    //       {
+    //         headers: {
+    //           'Content-Type': 'application/json',
+    //           'gameId': game._id,
+    //           'playerId': player._id,
+    //         },
+    //       },
+    //     );
+
+    //     const data = response.data;
+    //     if (data.success == true) {
+    //       setExhibitionTitle(data.exhibitionTitle);
+    //     } else {
+    //        setExhibitionTitle("Your exhibition is missing. Please contact the game host.");
+    //     }
+    //     // Assuming the API returns a list of players and their readiness status
+    //   } catch (error) {
+    //     console.error(`Error: ${error}`);
+    //     return false;
+    //   }
+    // }
+
+    // getExhibitionTitle(gameId, playerId);
+
+  }, [game, player]);
 
 
   async function handleSubmit(e) {
@@ -88,8 +102,8 @@ const response = await fetch(
   {
     headers: {
       'Content-Type': 'application/json',
-      'gameId': gameId,
-      'playerId': playerId
+      'gameId': game._id,
+      'playerId': player._id,
     },
     method: 'POST',
     body: JSON.stringify({ names }),
@@ -97,8 +111,6 @@ const response = await fetch(
 );
 
     const data = await response.json();
-
-
 
     if (response.ok) {
       setMessage('Success!');
@@ -122,15 +134,22 @@ const response = await fetch(
         <div>
           <h1>{exhibitionTitle}</h1>
           <form onSubmit={handleSubmit}>
-            {setters.map((set, index) => (
+
+            {names.map((name, index) => (
               <div key={index}>
                 <input
                   type="text"
                   placeholder={`Enter the name of the artwork ${index + 1}`}
-                  onChange={(event) => set(event.target.value)}
+                  value={name}
+                  onChange={(event) => {
+                    const newName = event.target.value;
+                    setNames((prevNames) => {
+                      const newNames = [...prevNames];
+                      newNames[index] = newName;
+                      return newNames;
+                    });
+                  }}
                 />
-                <br />
-                <br />
               </div>
             ))}
 

@@ -7,9 +7,12 @@ const GameSchema = new Schema({
   players: { type: Array, default: [] },
   date: { type: Date, default: Date.now },
   currentExhibitionIndex: { type: Number, default: 0 },
+  currentImageIndex: { type: Number, default: 0 },
   currentExhibitionDeck: { type: Array, default: [] },
   numberOfPlayers: { type: Number, default: 0 },
+  numberOfImages: { type: Number, default: 0 },
   winningPlayer: { type: String, default: '' },
+  round: { type: Number, default: 1 },
 });
 
 GameSchema.statics.updateGame = async function (updatedGame) {
