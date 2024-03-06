@@ -3,10 +3,7 @@ import { set } from 'mongoose';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { w3cwebsocket as W3CWebSocket } from 'websocket';
-import {
-  handleResponse,
-  getGameAndUser,
-} from '../client_utils/safety_utils';
+import { getGameAndUser, handleResponse } from '../client_utils/safety_utils';
 import { checkOneName } from '../client_utils/text_utils';
 import ErrorMessage from './PlayHeader/ErrorMessage.js';
 import Message from './PlayHeader/Message.js';
@@ -53,7 +50,7 @@ useEffect(() => {
 
 
  //
- //  useEffect(() => {
+ //
  //
  // async function getGameAndPlayer() {
  //   try {
@@ -94,7 +91,7 @@ useEffect(() => {
  //   }
  // }
 
-
+ useEffect(() => {
   const client = new W3CWebSocket('ws://localhost:4000');
 
     client.onopen = () => {
@@ -142,8 +139,9 @@ useEffect(() => {
     client.close();
   };
 
+  }, []);
 
-  });
+
 
   function cardSelected(playerId) {
     if (playerId == player.playerId) {
@@ -266,20 +264,10 @@ useEffect(() => {
 
 const mainView = renderBasedOnConditions();
 
-
-  // useEffect(() => {
-  //   if (conditionCardGeneration) {
-  //     handleStart60();
-  //   }
-  // }, [playerId, game, player, $timeout1]);
-
-
-
-  // This following section will display the table with the records of individuals.
   return (
     <div>
-     <PlayerInfo score={player.score} username={player.name} />
-      <StateInfo exhibitionTitle={exhibitionTitle} gameState={gameState} instructions={instructions} />
+     <PlayerInfo score={player.score} exhibitionTitle={exhibitionTitle} username={player.name} />
+      <StateInfo  gameState={gameState} instructions={instructions} />
 
       {mainView}
 
