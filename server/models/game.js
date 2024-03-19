@@ -9,6 +9,7 @@ const GameSchema = new Schema({
   currentExhibitionIndex: { type: Number, default: 0 },
   currentImageIndex: { type: Number, default: 0 },
   currentExhibitionDeck: { type: Array, default: [] },
+  gallery: { type: Array, default: [] },
   numberOfPlayers: { type: Number, default: 0 },
   numberOfImages: { type: Number, default: 0 },
   winningPlayer: { type: String, default: '' },

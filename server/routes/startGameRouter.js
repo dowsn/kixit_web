@@ -6,11 +6,30 @@ import openaiController from '../controllers/openaiController.js';
 import { randomString } from '../helpers/utilities.js';
 import game from '../models/game.js';
 import Game from '../models/game.js'; // adjust the path to match the location of your Game.js file
-import Player from '../models/player.js'; // adjust the path to match the location of your Player.js file
+import Player from '../models/player.js';
+import playGameRouter from "./playGameRouter.js"; // adjust the path to match the location of your Player.js file
 
 // We use it to define our routes.
 // The router will be added as a middleware and will take control of requests starting with path /record.
 const startGameRouter = express.Router();
+
+
+startGameRouter.route('/getImages').get(async (req, res) => {
+
+  const prompt = "love";
+
+
+  // Now you can use the prompt to generate images
+  try {
+    const images = await openaiController.generateImages(prompt);
+    console.log(images);
+    res.json({ images });
+  } catch (error) {
+    res.status(500).json({ message: 'Error generating images' + error.message });
+
+  }
+
+});
 
 startGameRouter.route('/new_game/:username/:numberofplayers/:numberofimages').get(async (req, res) => {
   //  res.status(200).json({ gameId: '12wwj3', playerId: '456' });

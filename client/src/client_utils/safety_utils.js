@@ -27,24 +27,22 @@ export const fetchGameData = async (gameId, playerId) => {
   }
 };
 
-export function getGameAndUser() {
-  const navigation = useNavigate();
+export function getGameAndUser(navigate) {
   const gameId = localStorage.getItem('gameId');
   const playerId = localStorage.getItem('playerId');
 
-
   if (!gameId || !playerId) {
-    navigation.navigate('NewGame');
+    navigate('NewGame');
+    return Promise.resolve(null); // return a resolved Promise with null value
   } else {
-    fetchGameData(gameId, playerId)
-        .then((data) => {
-          return {gameData: data.game, playerData: data.player};
-        })
-        .catch((error) => {
-          console.error(`Error: ${error}`);
-        });
-
-
+    return fetchGameData(gameId, playerId) // return the Promise returned by fetchGameData
+      .then((data) => {
+        return { gameData: data.game, playerData: data.player };
+      })
+      .catch((error) => {
+        console.error(`Error: ${error}`);
+        return null; // return null if there's an error
+      });
   }
 }
 

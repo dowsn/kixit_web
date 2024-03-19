@@ -17,23 +17,33 @@ export default function NameArtworks() {
   const [player, setPlayer] = useState({});
   const [names, setNames] = useState([]);
 
+  const navigate = useNavigate();
 
 
   useEffect(() => {
 
-    const { gameData, playerData } = getGameAndUser();
+    getGameAndUser(navigate).then((data) => {
+      if (data) {
 
-    setGame(gameData);
-    setPlayer(playerData);
+        console.log(data.gameData, data.playerData);
 
-    game.numberOfImages.forEach((image) => {
-      setNames(prevNames => [...prevNames, '']);
-    }
-    );
+        const { gameData, playerData } = data;
 
-    setPlayer(playerData);
+          setGame(gameData);
+          setPlayer(playerData);
 
-   setExhibitionTitle(player.exhibitionTitle);
+          for (let i = 0; i < gameData.numberOfImages; i++) {
+          setNames((prevNames) => [...prevNames, '']);
+        }
+
+          setExhibitionTitle(playerData.exhibitionTitle);
+
+      }
+    });
+
+
+
+
 
 
     // async function getExhibitionTitle() {
@@ -65,7 +75,7 @@ export default function NameArtworks() {
 
     // getExhibitionTitle(gameId, playerId);
 
-  }, [game, player]);
+  }, []);
 
 
   async function handleSubmit(e) {
@@ -130,7 +140,11 @@ const response = await fetch(
   // This following section will display the table with the records of individuals.
   return (
     <div>
+      {exhibitionTitle === '' && (
+            <h1>Loading...</h1>
+      )}
       {message === '' && (
+
         <div>
           <h1>{exhibitionTitle}</h1>
           <form onSubmit={handleSubmit}>
@@ -159,8 +173,9 @@ const response = await fetch(
             <button type="submit">Submit</button>
           </form>
           <div className="error">{errorMessage}</div>
-        </div>
-      )}
+        </div>)}
+
+
 
       {message !== '' && (
         <div>

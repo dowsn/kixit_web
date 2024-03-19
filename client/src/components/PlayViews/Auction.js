@@ -1,18 +1,82 @@
 import {useState} from "react";
+import axios from 'axios';
 
 export default function Auction() {
     const [game, setGame] = useState({});
     const [player, setPlayer] = useState({});
 
-    const cardSelected = (playerId) => {
+    const cardSelected = async(playerId) => {
 
         // here I do all stuff and then send back to update
 
-        // update player score playerId + 1
+        // update player score playerId + 1 and save the card
+
+        for (let card in game.currentExhibitionDeck) {
+
+            if (card.playerId == playerId) {
+                // update
+
+
+                // putting to gallery
+                game.gallery.push(card);
+
+                try {
+                    const response = await axios.get(
+                        'http://localhost:4000/play_game/moveImageToGallery',
+                        {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                gameId: game._id,
+                                playerId: playerId,
+                                path: card.path
+                            },
+                        },
+                    );
+
+                    const data = response.data;
+                    if (data.success === true) {
+                        console.log(data);
+                    }
+
+                } catch (error) {
+                    console.error(`Error: ${error}`);
+                }
+
+                // update player score
+                game.players.find(player => player._id == playerId).score += 1;
+
+
+            }
+        }
+
 
         // move to next round gameCurrentRound + 1
 
         game.currentExhibitionDeck = [];
+
+
+        try {
+            const response = await axios.get(
+                'http://localhost:4000/play_game/deleteImages',
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        gameId: game._id,
+                        playerId: playerId,
+                    },
+                },
+            );
+
+            const data = response.data;
+            if (data.success === true) {
+                console.log(data);
+            }
+
+        } catch (error) {
+            console.error(`Error: ${error}`);
+        }
+
+
 
         let currentPlayerIndex = game.currentExhibitionIndex
         let maxPlayerIndex = game.numberOfPlayers - 1;
@@ -32,7 +96,7 @@ export default function Auction() {
 
         game.round += 1;
 
-        game.currentImageIndex = (currentPlayerIndex + 1) % numberOfPlayers;
+        game.currentImageIndex = (currentPlayerIndex + 1) % game.numberOfPlayers;
 
         return game;
         // update game
@@ -52,5 +116,6 @@ export default function Auction() {
             })}
         </div>
     );
+
 
 }

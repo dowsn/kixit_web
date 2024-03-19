@@ -1,7 +1,9 @@
 import fs from 'fs';
 import OpenAI from 'openai';
-import path from 'path';
 import constants from '../config/constants.js';
+import https from 'https';
+import path from 'path';
+import {randomString} from "../helpers/utilities.js";
 
 class OpenAIController {
   constructor() {
@@ -11,34 +13,46 @@ class OpenAIController {
     this.model = 'gpt-3.5-turbo';
   }
 
-  async generateImages(prompt) {
+  async generateImages(prompt, playerId, gameId) {
     const response = await this.openai.images.generate({
       model: 'dall-e-2',
       prompt: prompt,
-      n: 1,
-      response_format: 'b64_json',
+      n: 3,
+      response_format: 'url',
       size: '256x256',
     });
 
-    // let image_url1 = response.data[0].url;
-    // let image_url2 = response.data[1].url;
-    // let image_url3 = response.data[3].url;
+    console.log(response.data);
+    let imageUrls = response.data.map((image) => image.url);
 
-    let image = response.data[0].b64_json;
 
-    let base64Image = image.split(';base64,').pop();
+    const dir = path.join(process.cwd(), 'server', 'images', gameId, playerId);
+    fs.mkdirSync(dir, { recursive: true });
 
-    fs.writeFile(
-      path.join(constants.__dirname + '/images', 'image.png'),
-      base64Image,
-      { encoding: 'base64' },
-      (err) => {
-        console.error('Error:', err);
-      },
-    );
+    let i = randomString()
+    for (let imageUrl  of imageUrls) {
+      i++;
+      const filePath = path.join(dir, 'image' + i + '.png');
+      const file = fs.createWriteStream(filePath);
 
-    // console.log(image_url);
+      https.get(imageUrl, function(response) {
+        response.pipe(file);
+        response.on('end', function() {
+          console.log('Image downloaded successfully');
+        });
+      }).on('error', function(error) {
+        console.error('Error downloading image: ', error);
+      });
+    }
+
+
+    file.on('error', function(error) {
+      console.error('Error writing file: ', error);
+    });
+
   }
+
+
 
   setUserPrompt(prompt) {
     this.userPrompt = prompt;

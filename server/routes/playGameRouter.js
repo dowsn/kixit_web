@@ -2,6 +2,8 @@ import axios from 'axios';
 import express from 'express';
 import fs from 'fs';
 import mongoose from 'mongoose';
+import path from 'path';
+import { deleteFolderContents } from '../controllers/fileController.js';
 import openaiController from '../controllers/openaiController.js';
 import { getGame, getPlayer } from '../helpers/middleware.js';
 import { randomString } from '../helpers/utilities.js';
@@ -24,7 +26,7 @@ playGameRouter.route('/game_and_player').get(async (req, res) => {
 
   const currentPlayer = await Player.findOne({ _id: currentPlayerId });
 
-
+  console.log('currentPlayer' + player);
   if (game && player) {
     res
       .status(200)
@@ -74,28 +76,58 @@ try {
 
 
 playGameRouter.route('/getImages').get(async (req, res) => {
-    const prompt = 'love';
+    const prompt = req.body.prompt;
 
     // Now you can use the prompt to generate images
-    const images = await openaiController.generateImages(prompt);
+    const images = await openaiController.generateImages(prompt, req.player._id, req.game._id);
+
+  res.status(200).json({ message: 'Images added' });
+
+});
+
+playGameRouter.route('/deleteImages').get(async (req, res) => {
+
+    const dir = path.join(process.cwd(), 'server', 'images', req.game._id, req.player._id);
+    deleteFolderContents(dir);
+    res.status(200).json({ message: 'Images deleted' });
+
+
+});
+
+playGameRouter.route('/moveImageToGallery').get(async (req, res) => {
+    const currentImagePath = req.body.path;
+
+    const dir = path.join(process.cwd(), 'server', 'images', req.game._id, 'gallery');
+    fs.mkdirSync(dir, { recursive: true });
+    const newPath = path.join(dir, path.basename(currentImagePath));
+
+    fs.renameSync(currentImagePath, newPath);
+
+    res.status(200).json({ message: 'Image moved to gallery' });
+
 });
 
 
-playGameRouter.route('/getImages').post(async (req, res) => {
-
-   const prompt = req.body.prompt;
-
-
-   // Now you can use the prompt to generate images
-  const images = await openaiController.generateImages(prompt);
-  console.log(images);
-
-   res.json({ images });
-});
 
 playGameRouter.route('/downloadImage').get(async (req, res) => {
   const image = req.body.image;
   const filename = req.body.filename;
+
+  const data = image.replace(/^data:image\/\w+;base64,/, '');
+  fs.writeFile(`./images/${filename}`, data, { encoding: 'base64' }, (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send('Server error');
+    }
+
+    res.json('Image downloaded');
+  });
+});
+
+playGameRouter.route('/downloadImage2').get(async (req, res) => {
+  const image = req.body.image;
+  const filename = req.body.filename;
+
 
   const data = image.replace(/^data:image\/\w+;base64,/, '');
   fs.writeFile(`./images/${filename}`, data, { encoding: 'base64' }, (err) => {
